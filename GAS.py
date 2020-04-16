@@ -3,18 +3,19 @@
 
 
 Code written for medical client to combine staffing database with collections
-database to ulitmately determine optimum number of shifts. The companys largest 
-cost is staffing a hostpical shift, and the Cclient wants to know how 
+database to ultimately determine optimum number of shifts. The companys largest 
+cost is staffing a hospital shift, and the Client wants to know how 
 profitable each shift is. The collections database contains the of cases and 
 revenue of each provider. By combining these two databases the client will have 
 a better understanding of how many shifts are profitable. 
 
 Before running the code, 
-    1. Remve all instances of 'DR' from staffing databse to ensure shift matches 
-       to propper case lines
+    1. Remove all instances of 'DR' from staffing database to ensure shift matches 
+       to proper case lines
     2. Format dates in both databases as mm/dd/yy 
     3. Remove row 1 in collections
     4. Delete export metadata in last rows of collections
+
 
 
 """
@@ -34,18 +35,18 @@ collections = pd.read_csv('MostRecentData/SHC Collections by DOS_04-14-2020.csv'
 
 #delete unnecessary columns from shift data
 staff = staff[['User','Date','Shift']]
-#delete unnessary columns from collections data
+#delete unnecessary columns from collections data
 collections = collections.drop(columns = 'ASA')
 #Delete empty rows 
 staff = staff.dropna(axis = 'rows', how = 'all')
 collections = collections.dropna(axis = 'rows', how = 'all')
 
-#%% Create join column by combing names and date strings 
+#%% Create join column by combining names and date strings 
 
 #Each Database contains a provider and a date, albeit in different formats
 #Databses will be joined on a unique provider date combination
 
-#Seperate provider first and last names and standardize case
+#Separate provider first and last names and standardize case
 staff[['Last Name', 'First Name']] = staff['User'].str.split(',', expand = True)
 staff['Last Name'] = staff['Last Name'].str.upper()
 collections[['Last Name', 'First Name']
@@ -83,8 +84,9 @@ collections['Case_Day'] = collections['Date of Service - Case'].dt.day_name()
 
 #%% Clean shift names with formatted dates
 
-#Weekend call shift not standarized in databses sometimes Call sometimes WE CALL
-#Weekday calls shfits are not assigned revenue so need to differentiate
+#Weekend call shift not standardized in databses sometimes Call sometimes WE CALL
+#Weekday calls shifts are not assigned revenue so need to differentiate
+
 
 #Change MV Call on weekends to MV WE Call 1
 staff.loc[(staff['Shift'] == 'MV Call 1') & (staff['Staff_Day'] == 5) , 
@@ -95,8 +97,8 @@ staff.loc[(staff['Shift'] == 'MV Call 1') & (staff['Staff_Day'] == 6) ,
 
 #%% Filter out Call shifts - Remove Call shifts and add back in Weekend call shifts
 
-#Providers have a shift for busniess hour cases and a call shift of after hours work.
-#Revenue should be assinged to the normal shift, not the call shift. 
+#Providers have a shift for business hour cases and a call shift of after hours work.
+#Revenue should be assigned to the normal shift, not the call shift. 
 #On weekends there are only call shifts. 
 #Revenue should be assigned to weekend call shifts 
 
@@ -106,12 +108,12 @@ staff_shift_Filtered = staff[staff.Shift.str.contains('Call') == False]
 wknd_call_shifts = staff[staff.Shift.str.contains('Call WE | WE Call') == True]
 #add weekend call shifts back to shifts
 staff_shift_Filtered = staff_shift_Filtered.append(wknd_call_shifts)
-#store Exluded Call Shifts
+#store excluded Call Shifts
 staff_excluded_shifts = staff[staff.Shift.str.contains('Call') == True]
 staff_excluded_shifts = staff_excluded_shifts.drop(staff[staff.Shift.str.contains(
     'Call WE | WE Call') == True].index)
 
-#%% Find Duplicated Shifts
+#%% Find Duplicate Shifts
 
 duplicatedShifts = staff_shift_Filtered[
     staff_shift_Filtered.duplicated(['LookUp'], keep = False)]
@@ -120,7 +122,7 @@ duplicatedShifts = duplicatedShifts.assign(
 duplicatedShifts.rename(
     columns={'collections':'Provider has Cases on Date'}, inplace = True)
 duplicatedShifts.drop(columns = 'LookUp', inplace = True)
-print('There are ' + str(len(duplicatedShifts)/2) + ' dupliated shifts in first pass')
+print('There are ' + str(len(duplicatedShifts)/2) + ' duplicate shifts in first pass')
 
 #%% Join Databases
 
@@ -136,10 +138,10 @@ empty_cases = join[join['Shift'].isnull()]
 print ('There are ' + str(len(empty_shifts)) + ' empty shifts in first pass')
 print ('There are ' + str(len(empty_cases)) + ' empty cases in first pass')
 
-#%%remove rows with incmomplete data
+#%%remove rows with incomplete data
 join_cleaned = join.dropna(axis ='rows')
 
-#%% Repeat Join for call shfits 
+#%% Repeat Join for call shifts
 
 #There may be instances where a provider only had a call shift on a day
 #Revenue should be assigned to these call shifts
@@ -164,7 +166,7 @@ print ('There are ' + str(len(empty_casees_all)) + ' empty cases in second pass'
 
 #%% Add unmatched data back
 
-#Facility can be assumed from shift name.
+#Facility can be assumed from the shift name.
 empty_shifts_all.loc[empty_shifts_all['Shift'].str.contains('MV'), 
                        ['Facility']] = 'MOUNTAIN VISTA-MAIN'
 empty_shifts_all.loc[empty_shifts_all['Shift'].str.contains('TSL'), 
@@ -177,7 +179,7 @@ empty_shifts_all.loc[empty_shifts_all['Shift'].str.contains('Luke\'s'),
                        ['Facility']] = 'TEMPE ST LUKES  MEDICAL CENTER'
 empty_shifts_all.loc[empty_shifts_all['Shift'].str.contains('Physician Call'), 
                        ['Facility']] = 'MOUNTAIN VISTA-MAIN'
-#Create unkonwn shift for cases without a shift
+#Create unknown shift for cases without a shift
 empty_cases['Shift'] = 'Unknown Shift'
 #Add unmatched data back
 join_all =join_cleaned.append([empty_shifts_all,empty_casees_all])
@@ -206,7 +208,7 @@ facility_group.index = [facility_group.index.get_level_values(0),
                         ['Total'] * len(facility_group)]
                                                                                                
 #Create shift level dataframe
-#Group by year, month, facility, and shift. Aggreate shifts and financials
+#Group by year, month, facility, and shift. Aggregate shifts and financials
 shift_group = join_all.groupby([join_all['Final_Date'].dt.year.rename('year'), 
                               join_all['Final_Date'].dt.month.rename('month'), 
                               'Facility', 
@@ -225,6 +227,6 @@ output = output.rename(columns = {'Index': 'Shift', 'LookUp':'Shift_Count'})
 #%% Export Data
 
 #output.to_csv('Output/output.csv')
-
+#join_all.to_csv('Output/joined_databases.csv')
 
 
