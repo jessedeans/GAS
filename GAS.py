@@ -15,6 +15,7 @@ Before running the code,
     2. Format dates in both databases as mm/dd/yy 
     3. Remove row 1 in collections
     4. Delete export metadata in last rows of collections
+    5. Change file names in Import Raw Data section beginning on line 27
 
 
 
