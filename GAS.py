@@ -2,7 +2,7 @@
 """
 
 
-Code written for medical client to combine staffing database with collections
+Code written for medical practice to combine staffing database with collections
 database to ultimately determine optimum number of shifts. The companys largest 
 cost is staffing a hospital shift, and the Client wants to know how 
 profitable each shift is. The collections database contains the of cases and 
