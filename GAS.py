@@ -9,7 +9,7 @@ profitable each shift is. The collections database contains the of cases and
 revenue of each provider. By combining these two databases the client will have 
 a better understanding of how many shifts are profitable. 
 
-Before running the code, 
+Before running the code: (Next version of code will handle this in python)
     1. Remove all instances of 'DR' from staffing database to ensure shift matches 
        to proper case lines
     2. Format dates in both databases as mm/dd/yy 
